@@ -1,0 +1,21 @@
+﻿{
+  "launcher_name": "Ultimate Launcher x86",
+  "java_compatible": "1.8.0_x86",
+  "base_download_url": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/"
+  "versions": [
+    { "id": "1.12.2", "type": "release", "assets": "1.12", "main": "net.minecraft.client.main.Main", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/1.12.2-FAT.jar"},
+    { "id": "1.12",   "type": "release", "assets": "1.12", "main": "net.minecraft.client.main.Main", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/1.12-FAT.jar"},
+    { "id": "1.9.4",  "type": "release", "assets": "1.9",  "main": "net.minecraft.client.main.Main", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/1.9.4-FAT.jar"},
+    { "id": "1.9",    "type": "release", "assets": "1.9",  "main": "net.minecraft.client.main.Main", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/1.9-FAT.jar"},
+    { "id": "1.8.9",  "type": "release", "assets": "1.8",  "main": "net.minecraft.client.main.Main", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/1.8.9-FAT.jar"},
+    { "id": "1.8",    "type": "release", "assets": "1.8",  "main": "net.minecraft.client.main.Main", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/1.8-FAT.jar"},
+    { "id": "1.7.10", "type": "release", "assets": "1.7.10", "main": "net.minecraft.client.main.Main", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/1.7.10-FAT.jar"},
+    { "id": "1.7.2",  "type": "release", "assets": "1.7.2",  "main": "net.minecraft.client.main.Main", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/1.7.2-FAT.jar"},
+    { "id": "1.6.4",  "type": "release", "assets": "1.6.4",  "main": "net.minecraft.client.main.Main", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/1.6.4-FAT.jar"},
+    { "id": "1.5.2",  "type": "release", "assets": "legacy", "main": "net.minecraft.client.Minecraft", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/1.5.2-FAT.jar"},
+    { "id": "1.4.7",  "type": "release", "assets": "legacy", "main": "net.minecraft.client.Minecraft", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/1.4.7-FAT.jar"},
+    { "id": "1.0",    "type": "release", "assets": "legacy", "main": "net.minecraft.client.Minecraft", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/1.0-FAT.jar"},
+    { "id": "b1.7.3", "type": "old_beta", "assets": "pre-1.6", "main": "net.minecraft.client.Minecraft", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/b1.7.3-FAT.jar"},
+    { "id": "a1.2.6", "type": "old_alpha", "assets": "pre-1.6", "main": "net.minecraft.client.Minecraft", "downloadUrl": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/a1.2.6-FAT.jar"}
+  ]
+}
