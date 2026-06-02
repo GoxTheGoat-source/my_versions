@@ -65,7 +65,7 @@
 </head>
 <body>
 
-    <h1>Liens de Releases (Tags)</h1>
+    <h1>Liens de Releases</h1>
     
     <div class="container" id="links-container">
         <p class="status">Lecture de la page des tags en cours...</p>
@@ -73,7 +73,7 @@
 
     <script>
         // Utilisation d'un proxy CORS gratuit pour pouvoir lire le HTML de GitHub directement depuis le navigateur
-        const targetUrl = "https://github.com/goxthegoat-source/my_versions/tags";
+        const targetUrl = "https://github.com/Goxthegoat-source/my_versions/tags";
         const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(targetUrl);
 
         fetch(proxyUrl)
@@ -89,7 +89,7 @@
                 const htmlContent = data.contents;
                 
                 // Expression régulière pour attraper tous les href pointant vers /releases/tag/
-                const regex = /href="\/goxthegoat-source\/my_versions\/releases\/tag\/([^"]+)"/g;
+                const regex = /href="\/goxthegoat-source\/my_versions\/releases\/download\/([^"]+)"/g;
                 let match;
                 const uniqueLinks = new Set();
 
@@ -105,7 +105,7 @@
 
                 // Génération de l'interface pour chaque lien trouvé
                 uniqueLinks.forEach(tag => {
-                    const fullUrl = `https://github.com/goxthegoat-source/my_versions/releases/tag/${tag}`;
+                    const fullUrl = `https://github.com/goxthegoat-source/my_versions/releases/download/${tag}`;
                     
                     const div = document.createElement('div');
                     div.className = 'link-item';
