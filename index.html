@@ -73,7 +73,7 @@
 
     <script>
         // 1. Correction de la casse de l'URL cible (gox--->Gox)
-        const targetUrl = "https://github.com/goxthegoat-source/my_versions/releases";
+        const targetUrl = "https://github.com/goxthegoat-source/my_versions/releases/tag/versions/";
         const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(targetUrl);
 
         fetch(proxyUrl)
@@ -88,7 +88,7 @@
                 const htmlContent = data.contents;
                 
                 // 2. Correction de la Regex pour capturer tout le chemin du fichier
-                const regex = /href="\/goxthegoat-source\/my_versions\/releases\/download\/([^"]+)"/g;
+                const regex = /href="\/goxthegoat-source\/my_versions\/releases\/download\/versions\/([^"]+)"/g;
                 let match;
                 const uniqueLinks = new Set();
 
@@ -103,7 +103,7 @@
 
                 uniqueLinks.forEach(filePath => {
                     // filePath contient maintenant "nom_du_tag/nom_du_fichier.extension"
-                    const fullUrl = `https://github.com/goxthegoat-source/my_versions/releases/download/${filePath}`;
+                    const fullUrl = `https://github.com/goxthegoat-source/my_versions/releases/download/versions/${filePath}`;
                     
                     // On extrait juste le nom du fichier pour l'affichage propre dans le badge
                     const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
