@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste des Liens de Versions</title>
+    <title>Manifeste des Versions</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #1a1a1a;
+            background-color: #121214;
             color: #eaeaea;
             padding: 40px 20px;
             margin: 0;
@@ -16,45 +16,72 @@
             align-items: center;
         }
         h1 {
-            color: #58a6ff;
-            margin-bottom: 25px;
+            color: #00b4d8;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #7c7c8a;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
         }
         .container {
             width: 100%;
-            max-width: 650px;
-            background: #2d2d2d;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
-        .link-item {
-            background: #3a3a3a;
-            padding: 12px 15px;
-            margin: 8px 0;
+        .version-card {
+            background: #202024;
+            border: 1px solid #29292e;
             border-radius: 6px;
-            border-left: 4px solid #58a6ff;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .version-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+        .version-id {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #ffffff;
+        }
+        .type-badge {
+            background: #29292e;
+            color: #00b4d8;
+            border: 1px solid #00b4d8;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .download-box {
+            background: #121214;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #29292e;
+        }
+        .download-label {
+            font-size: 0.8rem;
+            color: #7c7c8a;
+            margin-bottom: 4px;
+            display: block;
         }
         a {
             color: #58a6ff;
             text-decoration: none;
             word-break: break-all;
-            font-size: 0.95rem;
+            font-family: monospace;
+            font-size: 0.9rem;
         }
         a:hover {
             text-decoration: underline;
-        }
-        .tag-badge {
-            background: #238636;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-left: 10px;
-            white-space: nowrap;
         }
         .status {
             text-align: center;
@@ -65,61 +92,89 @@
 </head>
 <body>
 
-    <h1>Liens des Releases</h1>
+    <h1>Manifeste des Versions</h1>
+    <div class="subtitle">Généré dynamiquement au format launcher.json</div>
     
-    <div class="container" id="links-container">
-        <p class="status">Lecture de la page des tags en cours...</p>
+    <div class="container" id="launcher-container">
+        <p class="status">Chargement du manifeste JSON...</p>
     </div>
 
     <script>
-        // 1. Correction de la casse de l'URL cible (gox--->Gox)
-        const targetUrl = "https://github.com/goxthegoat-source/my_versions/releases/tag/versions/";
-        const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(targetUrl);
+        const apiUrl = "https://api.github.com/repos/goxthegoat-source/my_versions/releases";
 
-        fetch(proxyUrl)
+        fetch(apiUrl)
             .then(response => {
-                if (!response.ok) throw new Error("Erreur de réseau");
+                if (!response.ok) throw new Error("Erreur lors de la récupération de l'API");
                 return response.json();
             })
-            .then(data => {
-                const container = document.getElementById('links-container');
-                container.innerHTML = ''; 
+            .then(releases => {
+                const container = document.getElementById('launcher-container');
+                container.innerHTML = ''; // On vide le chargement
 
-                const htmlContent = data.contents;
-                
-                // 2. Correction de la Regex pour capturer tout le chemin du fichier
-                const regex = /href="\/goxthegoat-source\/my_versions\/releases\/download\/versions\/([^"]+)"/g;
-                let match;
-                const uniqueLinks = new Set();
-
-                while ((match = regex.exec(htmlContent)) !== null) {
-                    uniqueLinks.add(match[1]);
-                }
-
-                if (uniqueLinks.size === 0) {
-                    container.innerHTML = '<p class="status">Aucun lien de téléchargement trouvé. Vérifiez que vous avez téléversé des fichiers (assets) dans vos releases !</p>';
+                if (releases.length === 0) {
+                    container.innerHTML = '<p class="status">Aucune release trouvée.</p>';
                     return;
                 }
 
-                uniqueLinks.forEach(filePath => {
-                    // filePath contient maintenant "nom_du_tag/nom_du_fichier.extension"
-                    const fullUrl = `https://github.com/goxthegoat-source/my_versions/releases/download/versions/${filePath}`;
-                    
-                    // On extrait juste le nom du fichier pour l'affichage propre dans le badge
-                    const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
-                    
-                    const div = document.createElement('div');
-                    div.className = 'link-item';
-                    div.innerHTML = `
-                        <a href="${fullUrl}" target="_blank">${fullUrl}</a>
-                        <span class="tag-badge">${fileName}</span>
-                    `;
-                    container.appendChild(div);
+                // C'EST ICI QU'ON CONSTRUIT LA STRUCTURE TYPE LAUNCHER.JSON
+                // Exactement comme le format attendu par un lanceur de jeu
+                const launcherJson = {
+                    latest: {
+                        release: "",
+                        snapshot: ""
+                    },
+                    versions: []
+                };
+
+                // Remplissage du dictionnaire avec les données de l'API GitHub
+                releases.forEach((release, index) => {
+                    // On détermine le type (par exemple snapshot si le nom contient alpha/beta, sinon release)
+                    const isSnapshot = release.tag_name.toLowerCase().includes('alpha') || release.tag_name.toLowerCase().includes('beta');
+                    const type = isSnapshot ? "snapshot" : "release";
+
+                    // Définir la toute dernière version disponible
+                    if (index === 0 && type === "release") launcherJson.latest.release = release.tag_name;
+                    if (index === 0 && type === "snapshot") launcherJson.latest.snapshot = release.tag_name;
+
+                    // Chercher l'URL de l'asset lourd (.jar, .zip), sinon se rabattre sur le code source
+                    let downloadUrl = release.zipball_url; 
+                    if (release.assets && release.assets.length > 0) {
+                        downloadUrl = release.assets[0].browser_download_url;
+                    }
+
+                    // On injecte dans la liste des versions
+                    launcherJson.versions.push({
+                        id: release.tag_name,
+                        type: type,
+                        url: downloadUrl,
+                        time: release.published_at,
+                        releaseTime: release.created_at
+                    });
                 });
+
+                // Maintenant, on boucle sur notre structure "launcher.json" pour l'afficher graphiquement
+                launcherJson.versions.forEach(v => {
+                    const card = document.createElement('div');
+                    card.className = 'version-card';
+                    card.innerHTML = `
+                        <div class="version-header">
+                            <span class="version-id">${v.id}</span>
+                            <span class="type-badge">${v.type}</span>
+                        </div>
+                        <div class="download-box">
+                            <span class="download-label">URL de l'asset (binaire) :</span>
+                            <a href="${v.url}" target="_blank">${v.url}</a>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                // Optionnel : Affiche le JSON brut généré dans la console F12 pour ton débug
+                console.log("Structure launcher.json générée :", launcherJson);
             })
             .catch(error => {
-                document.getElementById('links-container').innerHTML = `
-                    <p class="status" style="color: #f85149;">Erreur lors de la récupération des éléments HTML.</p>
+                document.getElementById('launcher-container').innerHTML = `
+                    <p class="status" style="color: #f85149;">Erreur de synchronisation avec l'API GitHub.</p>
                 `;
                 console.error(error);
             });
