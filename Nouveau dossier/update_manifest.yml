@@ -1,0 +1,37 @@
+name: Auto Update Minecraft Manifest
+
+on:
+  schedule:
+    # S'exécute automatiquement toutes les 6 heures
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Permet de lancer la mise à jour manuellement si tu veux
+
+jobs:
+  build-and-update:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Récupérer le code du dépôt
+      uses: actions/checkout@v4
+
+    - name: Installer Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Compiler et exécuter le script Java
+      run: |
+        javac parser/ManifestParser.java
+        java -cp parser ManifestParser
+        # Déplace le fichier index.html généré à la racine si nécessaire
+        mv index.html ./index.html
+
+    - name: Pousser la mise à jour sur GitHub
+      run: |
+        git config --global user.name "GitHub Actions Bot"
+        git config --global user.email "actions@github.com"
+        git add index.html
+        # Ne fait un commit que s'il y a des changements (nouvelle version)
+        git diff-index --quiet HEAD || git commit -m "?? Auto-update: Nouvelle version Minecraft détectée"
+        git push
