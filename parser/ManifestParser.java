@@ -23,10 +23,10 @@ public class ManifestParser {
             System.out.println("Extraction des versions...");
             List<String> versions = parseVersions(jsonContent);
 
-            System.out.println("Génération du fichier index.html...");
-            generateApacheHTML(versions);
+            System.out.println("Génération de l'arborescence et des fichiers HTML...");
+            generateStructureAndHTML(versions);
 
-            System.out.println("Terminé ! Le fichier index.html a été généré avec succès.");
+            System.out.println("Terminé ! Toute l'arborescence a été créée avec succès.");
 
         } catch (Exception e) {
             System.err.println("Une erreur est survenue lors de l'exécution :");
@@ -34,7 +34,6 @@ public class ManifestParser {
         }
     }
 
-    // 1. Fonction pour télécharger le JSON de Mojang
     private static String fetchJSON(String urlString) throws Exception {
         StringBuilder result = new StringBuilder();
         URL url = new URL(urlString);
@@ -51,67 +50,102 @@ public class ManifestParser {
         return result.toString();
     }
 
-    // 2. Fonction pour extraire l'ID de chaque version via Regex
     private static List<String> parseVersions(String json) {
         List<String> versionsList = new ArrayList<>();
-        
-        // Ce pattern cherche la clé "id": "nom_de_la_version" dans le JSON
         Pattern pattern = Pattern.compile("\"id\"\\s*:\\s*\"([^\"]+)\"");
         Matcher matcher = pattern.matcher(json);
 
         while (matcher.find()) {
-            String versionId = matcher.group(1);
-            versionsList.add(versionId);
+            versionsList.add(matcher.group(1));
         }
         return versionsList;
     }
 
-    // 3. Fonction pour écrire le fichier HTML au bon endroit
-    private static void generateApacheHTML(List<String> versions) throws Exception {
-        // Définition du fichier cible dans le chemin énoncé
-        File targetFile = new File("myfiles/minecraft/index.html");
-        
-        // Sécurité : Crée les dossiers 'myfiles' et 'minecraft' s'ils n'existent pas encore
-        File parentDir = targetFile.getParentFile();
-        if (parentDir != null && !parentDir.exists()) {
-            parentDir.mkdirs();
-        }
+    private static void generateStructureAndHTML(List<String> versions) throws Exception {
+        // 1. Génération de l'index principal : myfiles/minecraft/index.html
+        File mainIndexFile = new File("myfiles/minecraft/index.html");
+        ensureDirectoryExists(mainIndexFile.getParentFile());
 
-        // On passe directement le fichier cible au BufferedWriter
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(targetFile))) {
-            
-            // Entête HTML et Style CSS
-            writer.write("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n");
-            writer.write("<html>\n<head>\n");
-            writer.write("    <title>Index of /myfiles/minecraft/</title>\n");
-            writer.write("    <style>body, td, th { font-family: Verdana; font-size: 13px; }</style>\n");
-            writer.write("</head>\n<body>\n");
-            writer.write("    <h1>Index of /myfiles/minecraft/</h1>\n");
-            
-            // Début du tableau Apache
-            writer.write("    <table>\n");
-            writer.write("        <tr><th valign=\"top\"><img src=\"https://www.apache.org/icons/blank.gif\" alt=\"[ICO]\"></th>");
-            writer.write("<th><a href=\"#\">Name</a></th><th><a href=\"#\">Size</a></th><th><a href=\"#\">Description</a></th></tr>\n");
-            writer.write("        <tr><th colspan=\"4\"><hr></th></tr>\n");
-            
-            // Ligne du Parent Directory
-            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td>");
-            writer.write("<td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(mainIndexFile))) {
+            writeHtmlHeader(writer, "Index of /myfiles/minecraft/", "Index of /myfiles/minecraft/");
+            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
 
-            // Boucle pour insérer chaque version trouvée
             for (String version : versions) {
                 writer.write("        <tr>\n");
                 writer.write("            <td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td>\n");
-                writer.write("            <td><a href=\"" + version + "\">" + version + "</a></td>\n");
-                writer.write("            <td align=\"right\">131</td>\n"); 
+                writer.write("            <td><a href=\"" + version + "/\">" + version + "/</a></td>\n");
+                writer.write("            <td align=\"right\">131</td>\n");
                 writer.write("            <td>&nbsp;</td>\n");
                 writer.write("        </tr>\n");
-            }
 
-            // Fin du tableau et du fichier
-            writer.write("        <tr><th colspan=\"4\"><hr></th></tr>\n");
-            writer.write("    </table>\n");
-            writer.write("</body>\n</html>\n");
+                // 2. Génération de la sous-structure pour CHAQUE version
+                generateVersionFolders(version);
+            }
+            writeHtmlFooter(writer);
         }
+    }
+
+    private static void generateVersionFolders(String version) throws Exception {
+        String versionPath = "myfiles/minecraft/" + version + "/";
+
+        // --- Index de la Version (contient 'downloads/' et 'libs/') ---
+        File versionIndex = new File(versionPath + "index.html");
+        ensureDirectoryExists(versionIndex.getParentFile());
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(versionIndex))) {
+            writeHtmlHeader(writer, "Index of /myfiles/minecraft/" + version + "/", "Index of /myfiles/minecraft/" + version + "/");
+            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"downloads/\">downloads/</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"libs/\">libs/</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+            writeHtmlFooter(writer);
+        }
+
+        // --- Index du dossier 'downloads' (pour client, server, windows_server, client.txt) ---
+        File downloadsIndex = new File(versionPath + "downloads/index.html");
+        ensureDirectoryExists(downloadsIndex.getParentFile());
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(downloadsIndex))) {
+            writeHtmlHeader(writer, "Index of /myfiles/minecraft/" + version + "/downloads/", "Index of /myfiles/minecraft/" + version + "/downloads/");
+            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+            
+            // Fichiers prêts à recevoir tes futurs liens directs
+            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[BIN]\"></td><td><a href=\"client.jar\">client.jar</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[BIN]\"></td><td><a href=\"server.jar\">server.jar</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[BIN]\"></td><td><a href=\"windows_server.exe\">windows_server.exe</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/text.gif\" alt=\"[TXT]\"></td><td><a href=\"client.txt\">client.txt</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+            writeHtmlFooter(writer);
+        }
+
+        // --- Index du dossier 'libs' (vide pour le moment) ---
+        File libsIndex = new File(versionPath + "libs/index.html");
+        ensureDirectoryExists(libsIndex.getParentFile());
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(libsIndex))) {
+            writeHtmlHeader(writer, "Index of /myfiles/minecraft/" + version + "/libs/", "Index of /myfiles/minecraft/" + version + "/libs/");
+            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+            writeHtmlFooter(writer);
+        }
+    }
+
+    private static void ensureDirectoryExists(File dir) {
+        if (dir != null && !dir.exists()) {
+            dir.mkdirs();
+        }
+    }
+
+    private static void writeHtmlHeader(BufferedWriter writer, String title, String heading) throws Exception {
+        writer.write("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n");
+        writer.write("<html>\n<head>\n");
+        writer.write("    <title>" + title + "</title>\n");
+        writer.write("    <style>body, td, th { font-family: Verdana; font-size: 13px; }</style>\n");
+        writer.write("</head>\n<body>\n");
+        writer.write("    <h1>" + heading + "</h1>\n");
+        writer.write("    <table>\n");
+        writer.write("        <tr><th valign=\"top\"><img src=\"https://www.apache.org/icons/blank.gif\" alt=\"[ICO]\"></th>");
+        writer.write("<th><a href=\"#\">Name</a></th><th><a href=\"#\">Size</a></th><th><a href=\"#\">Description</a></th></tr>\n");
+        writer.write("        <tr><th colspan=\"4\"><hr></th></tr>\n");
+    }
+
+    private static void writeHtmlFooter(BufferedWriter writer) throws Exception {
+        writer.write("        <tr><th colspan=\"4\"><hr></th></tr>\n");
+        writer.write("    </table>\n");
+        writer.write("</body>\n</html>\n");
     }
 }
