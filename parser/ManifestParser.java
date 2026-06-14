@@ -92,7 +92,7 @@ public class ManifestParser {
                 writer.write("        <tr>\n");
                 writer.write("            <td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td>\n");
                 // Liens formatés comme nathaan.com avec ?mc_version=
-                writer.write("            <td><a href=\"?mc_version=" + version + "\">" + version + "</a></td>\n");
+                writer.write("            <td><a href=\"" + version + "\">" + version + "</a></td>\n");
                 writer.write("            <td align=\"right\">131</td>\n"); // Taille fictive pour le style
                 writer.write("            <td>&nbsp;</td>\n");
                 writer.write("        </tr>\n");
