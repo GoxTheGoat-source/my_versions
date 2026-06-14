@@ -1,6 +1,7 @@
 package parser;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -65,11 +66,21 @@ public class ManifestParser {
         return versionsList;
     }
 
-    // 3. Fonction pour écrire le fichier HTML au style exact de nathaan.com
+    // 3. Fonction pour écrire le fichier HTML au bon endroit
     private static void generateApacheHTML(List<String> versions) throws Exception {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("index.html"))) {
+        // Définition du fichier cible dans le chemin énoncé
+        File targetFile = new File("myfiles/minecraft/index.html");
+        
+        // Sécurité : Crée les dossiers 'myfiles' et 'minecraft' s'ils n'existent pas encore
+        File parentDir = targetFile.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs();
+        }
+
+        // On passe directement le fichier cible au BufferedWriter
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(targetFile))) {
             
-            // Entête HTML et Style CSS de nathaan.com
+            // Entête HTML et Style CSS
             writer.write("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n");
             writer.write("<html>\n<head>\n");
             writer.write("    <title>Index of /myfiles/minecraft/</title>\n");
@@ -91,9 +102,8 @@ public class ManifestParser {
             for (String version : versions) {
                 writer.write("        <tr>\n");
                 writer.write("            <td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td>\n");
-                // Liens formatés comme nathaan.com avec ?mc_version=
                 writer.write("            <td><a href=\"" + version + "\">" + version + "</a></td>\n");
-                writer.write("            <td align=\"right\">131</td>\n"); // Taille fictive pour le style
+                writer.write("            <td align=\"right\">131</td>\n"); 
                 writer.write("            <td>&nbsp;</td>\n");
                 writer.write("        </tr>\n");
             }
