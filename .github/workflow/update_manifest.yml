@@ -2,9 +2,8 @@ name: Auto Update Minecraft Manifest
 
 on:
   schedule:
-    # S'exécute automatiquement toutes les 6 heures
-    - cron: '0 */6 * * *'
-  workflow_dispatch: # Permet de lancer la mise à jour manuellement si tu veux
+    - cron: '0 */12 * * *' # On passe à 12h pour laisser respirer le serveur face à la tonne de fichiers
+  workflow_dispatch:
 
 jobs:
   build-and-update:
@@ -20,18 +19,30 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
+    - name: Optimiser les paramètres Git pour les gros volumes de fichiers
+      run: |
+        git config --global core.preloadindex true
+        git config --global core.fscache true
+        git config --global merge.renameLimit 4000
+
     - name: Compiler et exécuter le script Java
       run: |
         javac parser/ManifestParser.java
         java -cp parser ManifestParser
-        # Déplace le fichier index.html généré à la racine si nécessaire
-        mv index.html ./index.html
 
-    - name: Pousser la mise à jour sur GitHub
+    - name: Pousser la structure sur GitHub
       run: |
         git config --global user.name "GitHub Actions Bot"
         git config --global user.email "actions@github.com"
-        git add index.html
-        # Ne fait un commit que s'il y a des changements (nouvelle version)
-        git diff-index --quiet HEAD || git commit -m "🤖 Auto-update: Nouvelle version Minecraft détectée"
+        
+        # On force Git à tout prendre en compte calmement
+        git add myfiles/
+        
+        # On vérifie s'il y a de nouveaux fichiers avant de commit
+        if ! git diff-index --quiet HEAD; then
+          git commit -m "🤖 Auto-update: Synchronisation complète des dossiers de téléchargement Mojang"
+          git push
+        else
+          echo "Aucun changement détecté, pas besoin de mettre à jour."
+        fiindex --quiet HEAD || git commit -m "🤖 Auto-update: Nouvelle version Minecraft détectée"
         git push
