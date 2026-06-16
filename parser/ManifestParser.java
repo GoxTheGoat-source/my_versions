@@ -112,6 +112,8 @@ public class ManifestParser {
             String clientUrl = extractDownloadUrl(versionJson, "client");
             String serverUrl = extractDownloadUrl(versionJson, "server");
             String windowsServerUrl = extractDownloadUrl(versionJson, "windows_server");
+         // Échappement du point pour correspondre exactement à "client.txt" dans le JSON
+            String clientTxtUrl = extractDownloadUrl(versionJson, "client\\.txt");
 
             // --- Index de la Version ---
             File versionIndex = new File(versionPath + "index.html");
@@ -132,17 +134,19 @@ public class ManifestParser {
                 writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
                 
                 if (!clientUrl.isEmpty()) {
-                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[BIN]\"></td><td><a href=\"" + clientUrl + "\">client.jar</a></td><td align=\"right\">  - </td><td>Lien Officiel Mojang</td></tr>\n");
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[JAR]\"></td><td><a href=\"" + clientUrl + "\">client.jar</a></td><td align=\"right\">  - </td><td>client</td></tr>\n");
                 }
                 if (!serverUrl.isEmpty()) {
-                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[BIN]\"></td><td><a href=\"" + serverUrl + "\">server.jar</a></td><td align=\"right\">  - </td><td>Lien Officiel Mojang</td></tr>\n");
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[JAR]\"></td><td><a href=\"" + serverUrl + "\">server.jar</a></td><td align=\"right\">  - </td><td>server</td></tr>\n");
                 }
                 if (!windowsServerUrl.isEmpty()) {
-                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[BIN]\"></td><td><a href=\"" + windowsServerUrl + "\">windows_server.exe</a></td><td align=\"right\">  - </td><td>Lien Officiel Mojang</td></tr>\n");
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[EXE]\"></td><td><a href=\"" + windowsServerUrl + "\">windows_server.exe</a></td><td align=\"right\">  - </td><td>windows_server</td></tr>\n");
                 }
-                
-                // client.txt reste pointé localement au cas où tu le rajoutes à la main
-                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/text.gif\" alt=\"[TXT]\"></td><td><a href=\"client.txt\">client.txt</a></td><td align=\"right\">  - </td><td>Configuration locale</td></tr>\n");
+             // S'affichera UNIQUEMENT si l'objet "client.txt" est présent dans le JSON de cette version
+                if (!clientTxtUrl.isEmpty()) {
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/text.gif\" alt=\"[TXT]\"></td><td><a href=\"" + clientTxtUrl + "\">client.txt</a></td><td align=\"right\">  - </td><td>Lien Officiel Mojang</td></tr>\n");
+                }
+
                 writeHtmlFooter(writer);
             }
 
@@ -164,7 +168,7 @@ public class ManifestParser {
     // Utilitaire Regex pour cibler un type de download précis (client, server...)
     private static String extractDownloadUrl(String json, String type) {
         Pattern p = Pattern.compile("\"" + type + "\"\\s*:\\s*\\{[^}]*\"url\"\\s*:\\s*\"([^\"]+)\"");
-        Matcher m = p.pattern().matcher(json);
+        Matcher m = p.matcher(json); // Correction ici : on applique le matcher directement sur p
         if (m.find()) {
             return m.group(1);
         }
