@@ -28,8 +28,12 @@ jobs:
 
     - name: Compiler et exécuter le script Java
       run: |
+        # On compile le fichier en restant à la racine du dépôt
         javac parser/ManifestParser.java
-        java -cp parser ManifestParser
+        
+        # On l'exécute en indiquant la racine '.' comme Classpath (-cp) 
+        # et en donnant le nom complet de la classe avec son package
+        java -cp . parser.ManifestParser
 
     - name: Pousser la structure sur GitHub
       run: |
