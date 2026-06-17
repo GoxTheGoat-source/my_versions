@@ -212,7 +212,7 @@ public class ManifestParser {
                     }
 
                     // Écriture de la ligne de ce dossier de lib dans l'index global /libs/
-                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"" + safeFolderName + "/\">" + safeFolderName + "/</a></td><td align=\"right\">1 item</td><td>" + lib.nameId + "</td><td>&nbsp;</td></tr>\n");
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"" + safeFolderName + "/\">" + safeFolderName + "</a></td><td align=\"right\">1 item</td><td>folder</td><td>&nbsp;</td></tr>\n");
                 }
                 writeHtmlFooter(writer);
             }
@@ -226,8 +226,8 @@ public class ManifestParser {
                 String downloadsLabel = downloadsCount + (downloadsCount > 1 ? " items" : " item");
                 String libsLabel = libsCount + (libsCount > 1 ? " items" : " item");
                 
-                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"downloads/\">downloads/</a></td><td align=\"right\">" + downloadsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
-                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"libs/\">libs/</a></td><td align=\"right\">" + libsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"downloads/\">downloads</a></td><td align=\"right\">" + downloadsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"libs/\">libs</a></td><td align=\"right\">" + libsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
                 writeHtmlFooter(writer);
             }
 
