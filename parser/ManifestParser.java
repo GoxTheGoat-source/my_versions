@@ -1,4 +1,5 @@
 package parser;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -15,7 +16,9 @@ public class ManifestParser {
 
     private static final String MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 
-    // Classe interne pour stocker les infos de chaque version
+    // Optimisation : Compilation unique des patterns pour éviter la surcharge CPU dans les boucles
+    private static final Pattern MAIN_MANIFEST_PATTERN = Pattern.compile("\\{\\s*\"id\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"type\"\\s*:\\s*\"[^\"]+\"\\s*,\\s*\"url\"\\s*:\\s*\"([^\"]+)\"");
+
     static class VersionInfo {
         String id;
         String url;
@@ -23,6 +26,30 @@ public class ManifestParser {
         VersionInfo(String id, String url) {
             this.id = id;
             this.url = url;
+        }
+    }
+
+    static class FileInfo {
+        String url;
+        String size;
+        String sha1;
+
+        FileInfo(String url, String rawSize, String sha1) {
+            this.url = url;
+            this.size = formatSize(rawSize);
+            this.sha1 = (sha1 != null) ? sha1 : "-";
+        }
+
+        private String formatSize(String rawSize) {
+            if (rawSize == null || rawSize.isEmpty()) return "-";
+            try {
+                long bytes = Long.parseLong(rawSize);
+                if (bytes < 1024) return bytes + " B";
+                if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+                return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
+            } catch (NumberFormatException e) {
+                return "-";
+            }
         }
     }
 
@@ -63,12 +90,9 @@ public class ManifestParser {
         return result.toString();
     }
 
-    // Extrait à la fois l'ID ET l'URL du manifeste principal
     private static List<VersionInfo> parseMainManifest(String json) {
         List<VersionInfo> list = new ArrayList<>();
-        // Regex pour capturer l'id et l'url dans le tableau "versions"
-        Pattern pattern = Pattern.compile("\\{\\s*\"id\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"type\"\\s*:\\s*\"[^\"]+\"\\s*,\\s*\"url\"\\s*:\\s*\"([^\"]+)\"");
-        Matcher matcher = pattern.matcher(json);
+        Matcher matcher = MAIN_MANIFEST_PATTERN.matcher(json);
 
         while (matcher.find()) {
             list.add(new VersionInfo(matcher.group(1), matcher.group(2)));
@@ -77,25 +101,31 @@ public class ManifestParser {
     }
 
     private static void generateStructureAndHTML(List<VersionInfo> versions) throws Exception {
+        // Étape 1 : On génère d'abord tous les dossiers enfants pour que le comptage physique soit exact
+        for (VersionInfo v : versions) {
+            generateVersionFolders(v);
+        }
+
+        // Étape 2 : On écrit l'index principal avec les bons liens et les totaux
         File mainIndexFile = new File("myfiles/minecraft/index.html");
         ensureDirectoryExists(mainIndexFile.getParentFile());
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(mainIndexFile))) {
             writeHtmlHeader(writer, "Index of /myfiles/minecraft/", "Index of /myfiles/minecraft/");
-            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+            writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
 
-            // Pour limiter le temps d'exécution sur GitHub, on peut traiter en priorité les 50 dernières versions
-            // Ou tout traiter si le réseau suit. Ici on traite tout.
             for (VersionInfo v : versions) {
+                File versionDir = new File("myfiles/minecraft/" + v.id);
+                String folderItemsCount = countItemsInDirectory(versionDir);
+
                 writer.write("        <tr>\n");
                 writer.write("            <td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td>\n");
-                writer.write("            <td><a href=\"" + v.id + "/\">" + v.id + "/</a></td>\n");
-                writer.write("            <td align=\"right\">-</td>\n");
+                // Correction du bug de navigation : Ajout du slash '/' requis à la fin du href
+                writer.write("            <td><a href=\"" + v.id + "/\">" + v.id + "</a></td>\n");
+                writer.write("            <td align=\"right\">" + folderItemsCount + "</td>\n");
+                writer.write("            <td>&nbsp;</td>\n");
                 writer.write("            <td>&nbsp;</td>\n");
                 writer.write("        </tr>\n");
-
-                // Génération des sous-dossiers avec lecture de l'URL spécifique
-                generateVersionFolders(v);
             }
             writeHtmlFooter(writer);
         }
@@ -104,75 +134,115 @@ public class ManifestParser {
     private static void generateVersionFolders(VersionInfo v) {
         try {
             String versionPath = "myfiles/minecraft/" + v.id + "/";
-            
-            // 1. On télécharge le JSON spécifique de cette version pour lire l'objet "downloads"
             String versionJson = fetchJSON(v.url);
             
-            // Extraction des URLs des composants via Regex
-            String clientUrl = extractDownloadUrl(versionJson, "client");
-            String serverUrl = extractDownloadUrl(versionJson, "server");
-            String windowsServerUrl = extractDownloadUrl(versionJson, "windows_server");
-         // Échappement du point pour correspondre exactement à "client.txt" dans le JSON
-            String clientTxtUrl = extractDownloadUrl(versionJson, "client\\.txt");
+            FileInfo client = extractDownloadDetails(versionJson, "client");
+            FileInfo server = extractDownloadDetails(versionJson, "server");
+            FileInfo windowsServer = extractDownloadDetails(versionJson, "windows_server");
+            FileInfo clientTxt = extractDownloadDetails(versionJson, "client\\.txt");
 
-            // --- Index de la Version ---
-            File versionIndex = new File(versionPath + "index.html");
-            ensureDirectoryExists(versionIndex.getParentFile());
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(versionIndex))) {
-                writeHtmlHeader(writer, "Index of /myfiles/minecraft/" + v.id + "/", "Index of /myfiles/minecraft/" + v.id + "/");
-                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
-                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"downloads/\">downloads/</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
-                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"libs/\">libs/</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
-                writeHtmlFooter(writer);
-            }
+            File downloadsDir = new File(versionPath + "downloads");
+            File libsDir = new File(versionPath + "libs");
+            ensureDirectoryExists(downloadsDir);
+            ensureDirectoryExists(libsDir);
 
-            // --- Index du dossier 'downloads' avec les vrais liens officiels ---
-            File downloadsIndex = new File(versionPath + "downloads/index.html");
-            ensureDirectoryExists(downloadsIndex.getParentFile());
+            int downloadsCount = 0;
+
+            // --- Index du dossier 'downloads' ---
+            File downloadsIndex = new File(downloadsDir, "index.html");
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(downloadsIndex))) {
                 writeHtmlHeader(writer, "Index of /myfiles/minecraft/" + v.id + "/downloads/", "Index of /myfiles/minecraft/" + v.id + "/downloads/");
-                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
                 
-                if (!clientUrl.isEmpty()) {
-                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[JAR]\"></td><td><a href=\"" + clientUrl + "\">client.jar</a></td><td align=\"right\">  - </td><td>client</td></tr>\n");
+                if (client != null) {
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[JAR]\"></td><td><a href=\"" + client.url + "\">client.jar</a></td><td align=\"right\">" + client.size + "</td><td>client</td><td>" + client.sha1 + "</td></tr>\n");
+                    downloadsCount++;
                 }
-                if (!serverUrl.isEmpty()) {
-                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[JAR]\"></td><td><a href=\"" + serverUrl + "\">server.jar</a></td><td align=\"right\">  - </td><td>server</td></tr>\n");
+                if (server != null) {
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[JAR]\"></td><td><a href=\"" + server.url + "\">server.jar</a></td><td align=\"right\">" + server.size + "</td><td>server</td><td>" + server.sha1 + "</td></tr>\n");
+                    downloadsCount++;
                 }
-                if (!windowsServerUrl.isEmpty()) {
-                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[EXE]\"></td><td><a href=\"" + windowsServerUrl + "\">windows_server.exe</a></td><td align=\"right\">  - </td><td>windows_server</td></tr>\n");
+                if (windowsServer != null) {
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[EXE]\"></td><td><a href=\"" + windowsServer.url + "\">windows_server.exe</a></td><td align=\"right\">" + windowsServer.size + "</td><td>windows_server</td><td>" + windowsServer.sha1 + "</td></tr>\n");
+                    downloadsCount++;
                 }
-             // S'affichera UNIQUEMENT si l'objet "client.txt" est présent dans le JSON de cette version
-                if (!clientTxtUrl.isEmpty()) {
-                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/text.gif\" alt=\"[TXT]\"></td><td><a href=\"" + clientTxtUrl + "\">client.txt</a></td><td align=\"right\">  - </td><td>Lien Officiel Mojang</td></tr>\n");
+                if (clientTxt != null) {
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/text.gif\" alt=\"[TXT]\"></td><td><a href=\"" + clientTxt.url + "\">client.txt</a></td><td align=\"right\">" + clientTxt.size + "</td><td>mapping</td><td>" + clientTxt.sha1 + "</td></tr>\n");
+                    downloadsCount++;
                 }
 
                 writeHtmlFooter(writer);
             }
 
             // --- Index du dossier 'libs' ---
-            File libsIndex = new File(versionPath + "libs/index.html");
-            ensureDirectoryExists(libsIndex.getParentFile());
+            File libsIndex = new File(libsDir, "index.html");
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(libsIndex))) {
                 writeHtmlHeader(writer, "Index of /myfiles/minecraft/" + v.id + "/libs/", "Index of /myfiles/minecraft/" + v.id + "/libs/");
-                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td></tr>\n");
+                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                writeHtmlFooter(writer);
+            }
+
+            // --- Index de la Version ---
+            File versionIndex = new File(versionPath + "index.html");
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(versionIndex))) {
+                writeHtmlHeader(writer, "Index of /myfiles/minecraft/" + v.id + "/", "Index of /myfiles/minecraft/" + v.id + "/");
+                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                
+                String downloadsLabel = downloadsCount + (downloadsCount > 1 ? " items" : " item");
+                String libsLabel = "0 items";
+                
+                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"downloads/\">downloads</a></td><td align=\"right\">" + downloadsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"libs/\">libs</a></td><td align=\"right\">" + libsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
                 writeHtmlFooter(writer);
             }
 
         } catch (Exception e) {
-            // Si une vieille version échoue (par exemple URL 404 chez Mojang), on passe à la suivante sans crasher
             System.err.println("Passage de la version " + v.id + " suite à une erreur de lecture.");
         }
     }
 
-    // Utilitaire Regex pour cibler un type de download précis (client, server...)
-    private static String extractDownloadUrl(String json, String type) {
-        Pattern p = Pattern.compile("\"" + type + "\"\\s*:\\s*\\{[^}]*\"url\"\\s*:\\s*\"([^\"]+)\"");
-        Matcher m = p.matcher(json); // Correction ici : on applique le matcher directement sur p
+    private static FileInfo extractDownloadDetails(String json, String type) {
+        // Version robuste : On cherche de manière ciblée la clé demandée
+        Pattern pBlock = Pattern.compile("\"" + type + "\"\\s*:\\s*\\{([^}]+)\\}");
+        Matcher mBlock = pBlock.matcher(json);
+        
+        if (mBlock.find()) {
+            String blockContent = mBlock.group(1);
+            
+            String sha1 = extractField(blockContent, "sha1");
+            String size = extractField(blockContent, "size");
+            String url = extractField(blockContent, "url");
+            
+            if (!url.isEmpty()) {
+                return new FileInfo(url, size, sha1);
+            }
+        }
+        return null;
+    }
+
+    private static String extractField(String block, String field) {
+        Pattern p = Pattern.compile("\"" + field + "\"\\s*:\\s*\"?([^\",}]+)\"?");
+        Matcher m = p.matcher(block);
         if (m.find()) {
-            return m.group(1);
+            return m.group(1).trim();
         }
         return "";
+    }
+
+    private static String countItemsInDirectory(File dir) {
+        if (dir.exists() && dir.isDirectory()) {
+            String[] list = dir.list();
+            if (list != null) {
+                int count = 0;
+                for (String name : list) {
+                    if (!name.equals("index.html")) {
+                        count++;
+                    }
+                }
+                return count + (count > 1 ? " items" : " item");
+            }
+        }
+        return "0 items";
     }
 
     private static void ensureDirectoryExists(File dir) {
@@ -184,13 +254,13 @@ public class ManifestParser {
     private static void writeHtmlHeader(BufferedWriter writer, String title, String heading) throws Exception {
         writer.write("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<html>\n<head>\n");
         writer.write("    <title>" + title + "</title>\n");
-        writer.write("    <style>body, td, th { font-family: Verdana; font-size: 13px; }</style>\n</head>\n<body>\n");
+        writer.write("    <style>body, td, th { font-family: Verdana; font-size: 13px; text-align: left; } th { font-weight: bold; }</style>\n</head>\n<body>\n");
         writer.write("    <h1>" + heading + "</h1>\n    <table>\n");
-        writer.write("        <tr><th valign=\"top\"><img src=\"https://www.apache.org/icons/blank.gif\" alt=\"[ICO]\"></th><th>Name</th><th>Size</th><th>Description</th></tr>\n");
-        writer.write("        <tr><th colspan=\"4\"><hr></th></tr>\n");
+        writer.write("        <tr><th valign=\"top\"><img src=\"https://www.apache.org/icons/blank.gif\" alt=\"[ICO]\"></th><th><a href=\"#\">Name</a></th><th><a href=\"#\">Size</a></th><th><a href=\"#\">Description</a></th><th><a href=\"#\">SHA-1</a></th></tr>\n");
+        writer.write("        <tr><th colspan=\"5\"><hr></th></tr>\n");
     }
 
     private static void writeHtmlFooter(BufferedWriter writer) throws Exception {
-        writer.write("        <tr><th colspan=\"4\"><hr></th></tr>\n    </table>\n</body>\n</html>\n");
+        writer.write("        <tr><th colspan=\"5\"><hr></th></tr>\n    </table>\n</body>\n</html>\n");
     }
 }
