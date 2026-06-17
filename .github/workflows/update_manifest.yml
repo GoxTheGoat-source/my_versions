@@ -28,24 +28,26 @@ jobs:
 
     - name: Compiler et exécuter le script Java
       run: |
-        # On compile le fichier en restant à la racine du dépôt
-        javac parser/ManifestParser.java
+        # 1. On crée un dossier temporaire pour la compilation
+        mkdir -p bin
         
-        # On l'exécute en indiquant la racine '.' comme Classpath (-cp) 
-        # et en donnant le nom complet de la classe avec son package
-        java -cp . parser.ManifestParser
+        # 2. On compile les classes dedans (-d bin)
+        javac -d bin parser/ManifestParser.java
+        
+        # 3. On l'exécute depuis le dossier bin (-cp bin)
+        java -cp bin parser.ManifestParser
 
     - name: Pousser la structure sur GitHub
       run: |
         git config --global user.name "GitHub Actions Bot"
         git config --global user.email "actions@github.com"
         
-        # Ajoute l'arborescence générée par le script Java
+        # Ajoute l'arborescence générée par le script Java (le dossier bin est ignoré)
         git add myfiles/
         
-        # Le commit ne se fait que si Mojang a sorti une nouvelle version (différente de l'ancien index)
+        # Le commit ne se fait que si Mojang a sorti une nouvelle version
         if ! git diff-index --quiet HEAD; then
-          git commit -m "🤖 Auto-update: Synchronisation complète des dossiers de téléchargement Mojang (avec client.txt)"
+          git commit -m "🤖 Auto-update: Synchronisation complète des dossiers de téléchargement Mojang"
           git push
         else
           echo "Aucune modification détectée dans le manifeste de Mojang. Le site est déjà à jour."
