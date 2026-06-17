@@ -53,6 +53,19 @@ public class ManifestParser {
         }
     }
 
+    // Structure interne temporaire dédiée pour coupler une library à son ID ("name") et son nom de JAR réel
+    static class LibData {
+        String nameId;
+        String jarName;
+        FileInfo fileInfo;
+
+        LibData(String nameId, String jarName, FileInfo fileInfo) {
+            this.nameId = nameId;
+            this.jarName = jarName;
+            this.fileInfo = fileInfo;
+        }
+    }
+
     public static void main(String[] args) {
         try {
             System.out.println("Téléchargement du manifeste principal Mojang...");
@@ -120,7 +133,6 @@ public class ManifestParser {
 
                 writer.write("        <tr>\n");
                 writer.write("            <td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td>\n");
-                // Correction du bug de navigation : Ajout du slash '/' requis à la fin du href
                 writer.write("            <td><a href=\"" + v.id + "/\">" + v.id + "</a></td>\n");
                 writer.write("            <td align=\"right\">" + folderItemsCount + "</td>\n");
                 writer.write("            <td>&nbsp;</td>\n");
@@ -140,6 +152,9 @@ public class ManifestParser {
             FileInfo server = extractDownloadDetails(versionJson, "server");
             FileInfo windowsServer = extractDownloadDetails(versionJson, "windows_server");
             FileInfo clientTxt = extractDownloadDetails(versionJson, "client\\.txt");
+
+            // Extraction personnalisée des libraries
+            List<LibData> libraries = extractLibrariesDetails(versionJson);
 
             File downloadsDir = new File(versionPath + "downloads");
             File libsDir = new File(versionPath + "libs");
@@ -175,10 +190,30 @@ public class ManifestParser {
             }
 
             // --- Index du dossier 'libs' ---
+            int libsCount = libraries.size();
             File libsIndex = new File(libsDir, "index.html");
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(libsIndex))) {
                 writeHtmlHeader(writer, "Index of /myfiles/minecraft/" + v.id + "/libs/", "Index of /myfiles/minecraft/" + v.id + "/libs/");
                 writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                
+                for (LibData lib : libraries) {
+                    // Chaque lib prend la clé "name" comme nom de dossier (sécurisé pour les OS en remplaçant ':' par '-')
+                    String safeFolderName = lib.nameId.replace(":", "-");
+                    File individualLibDir = new File(libsDir, safeFolderName);
+                    ensureDirectoryExists(individualLibDir);
+
+                    // Génération de l'index.html propre dans le sous-dossier de la lib
+                    File individualLibIndex = new File(individualLibDir, "index.html");
+                    try (BufferedWriter libWriter = new BufferedWriter(new FileWriter(individualLibIndex))) {
+                        writeHtmlHeader(libWriter, "Index of /myfiles/minecraft/" + v.id + "/libs/" + safeFolderName + "/", "Index of /myfiles/minecraft/" + v.id + "/libs/" + safeFolderName + "/");
+                        libWriter.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                        libWriter.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[JAR]\"></td><td><a href=\"" + lib.fileInfo.url + "\">" + lib.jarName + "</a></td><td align=\"right\">" + lib.fileInfo.size + "</td><td>library artifact</td><td>" + lib.fileInfo.sha1 + "</td></tr>\n");
+                        writeHtmlFooter(libWriter);
+                    }
+
+                    // Écriture de la ligne de ce dossier de lib dans l'index global /libs/
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"" + safeFolderName + "/\">" + safeFolderName + "/</a></td><td align=\"right\">1 item</td><td>" + lib.nameId + "</td><td>&nbsp;</td></tr>\n");
+                }
                 writeHtmlFooter(writer);
             }
 
@@ -189,10 +224,10 @@ public class ManifestParser {
                 writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
                 
                 String downloadsLabel = downloadsCount + (downloadsCount > 1 ? " items" : " item");
-                String libsLabel = "0 items";
+                String libsLabel = libsCount + (libsCount > 1 ? " items" : " item");
                 
-                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"downloads/\">downloads</a></td><td align=\"right\">" + downloadsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
-                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"libs/\">libs</a></td><td align=\"right\">" + libsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"downloads/\">downloads/</a></td><td align=\"right\">" + downloadsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"libs/\">libs/</a></td><td align=\"right\">" + libsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
                 writeHtmlFooter(writer);
             }
 
@@ -202,7 +237,6 @@ public class ManifestParser {
     }
 
     private static FileInfo extractDownloadDetails(String json, String type) {
-        // Version robuste : On cherche de manière ciblée la clé demandée
         Pattern pBlock = Pattern.compile("\"" + type + "\"\\s*:\\s*\\{([^}]+)\\}");
         Matcher mBlock = pBlock.matcher(json);
         
@@ -218,6 +252,50 @@ public class ManifestParser {
             }
         }
         return null;
+    }
+
+    // Récupère proprement à la fois l'ID ("name") et le bloc d'artefact associé
+    private static List<LibData> extractLibrariesDetails(String json) {
+        List<LibData> list = new ArrayList<>();
+        
+        Pattern pLibsBlock = Pattern.compile("\"libraries\"\\s*:\\s*\\[(.*)\\]\\s*,\\s*\"logging\"");
+        Matcher mLibsBlock = pLibsBlock.matcher(json);
+        
+        String libsContent = "";
+        if (mLibsBlock.find()) {
+            libsContent = mLibsBlock.group(1);
+        } else {
+            Pattern pAlternative = Pattern.compile("\"libraries\"\\s*:\\s*\\[(.*)\\]");
+            Matcher mAlternative = pAlternative.matcher(json);
+            if (mAlternative.find()) {
+                libsContent = mAlternative.group(1);
+            }
+        }
+
+        if (!libsContent.isEmpty()) {
+            // Expression régulière robuste pour capturer le sous-bloc artifact et la valeur de la clé "name"
+            Pattern pSingleLib = Pattern.compile("\\{\\s*\"downloads\"\\s*:\\s*\\{[^}]*\"artifact\"\\s*:\\s*\\{([^}]+)\\}[^}]*\\}\\s*,\\s*\"name\"\\s*:\\s*\"([^\"]+)\"");
+            Matcher mSingleLib = pSingleLib.matcher(libsContent);
+            
+            while (mSingleLib.find()) {
+                String artifactBlock = mSingleLib.group(1);
+                String nameId = mSingleLib.group(2);
+                
+                String url = extractField(artifactBlock, "url");
+                String size = extractField(artifactBlock, "size");
+                String sha1 = extractField(artifactBlock, "sha1");
+                String path = extractField(artifactBlock, "path");
+                
+                if (!url.isEmpty()) {
+                    String filename = path.substring(path.lastIndexOf('/') + 1);
+                    if (filename.isEmpty()) {
+                        filename = "library.jar";
+                    }
+                    list.add(new LibData(nameId, filename, new FileInfo(url, size, sha1)));
+                }
+            }
+        }
+        return list;
     }
 
     private static String extractField(String block, String field) {
