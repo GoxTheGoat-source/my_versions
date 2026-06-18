@@ -1,0 +1,13 @@
+{
+  "id": "ERROR422-c",
+  "time": "2021-01-01T00:00:00+00:00",
+  "releaseTime": "2020-01-29T04:09:32+00:00",
+  "type": "snapshot",
+  "mainClass": "com.jdotsoft.jarloader.ERR422Loader",
+  "minimumLauncherVersion": 18,
+  "assets": "legacy",
+  "libraries": [],
+  "downloads": {    "client": {    "url": "https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/ERROR422-crossplatform.jar",    "sha1": "908dca097abb0ae8bc5557eca78f34dab8f25d35",    "size": 8022072}},
+  "jar": "ERROR422",
+  "minecraftArguments": "--username ${auth_player_name} --version ${version_name} --gameDir ${game_directory} --assetsDir ${assets_root} --assetIndex ${assets_index_name} --uuid ${auth_uuid} --accessToken ${auth_access_token} --userType ${user_type} --tweakClass cpw.mods.fml.common.launcher.FMLTwaker"
+}
