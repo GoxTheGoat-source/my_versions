@@ -53,7 +53,6 @@ public class ManifestParser {
         }
     }
 
-    // Structure interne temporaire dédiée pour coupler une library à son ID ("name") et son nom de JAR réel
     static class LibData {
         String nameId;
         String jarName;
@@ -62,6 +61,16 @@ public class ManifestParser {
         LibData(String nameId, String jarName, FileInfo fileInfo) {
             this.nameId = nameId;
             this.jarName = jarName;
+            this.fileInfo = fileInfo;
+        }
+    }
+
+    static class AssetIndexData {
+        String id;
+        FileInfo fileInfo;
+
+        AssetIndexData(String id, FileInfo fileInfo) {
+            this.id = id;
             this.fileInfo = fileInfo;
         }
     }
@@ -114,12 +123,12 @@ public class ManifestParser {
     }
 
     private static void generateStructureAndHTML(List<VersionInfo> versions) throws Exception {
-        // Étape 1 : On génère d'abord tous les dossiers enfants pour que le comptage physique soit exact
+        // Étape 1 : On génère d'abord tous les dossiers enfants
         for (VersionInfo v : versions) {
             generateVersionFolders(v);
         }
 
-        // Étape 2 : On écrit l'index principal avec les bons liens et les totaux
+        // Étape 2 : Écriture de l'index principal racine
         File mainIndexFile = new File("myfiles/minecraft/index.html");
         ensureDirectoryExists(mainIndexFile.getParentFile());
 
@@ -153,13 +162,15 @@ public class ManifestParser {
             FileInfo windowsServer = extractDownloadDetails(versionJson, "windows_server");
             FileInfo clientTxt = extractDownloadDetails(versionJson, "client\\.txt");
 
-            // Extraction personnalisée des libraries
             List<LibData> libraries = extractLibrariesDetails(versionJson);
+            AssetIndexData assetIndex = extractAssetIndexDetails(versionJson);
 
             File downloadsDir = new File(versionPath + "downloads");
             File libsDir = new File(versionPath + "libs");
+            File assetsLinkDir = new File(versionPath + "assets");
             ensureDirectoryExists(downloadsDir);
             ensureDirectoryExists(libsDir);
+            ensureDirectoryExists(assetsLinkDir);
 
             int downloadsCount = 0;
 
@@ -185,7 +196,6 @@ public class ManifestParser {
                     writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/text.gif\" alt=\"[TXT]\"></td><td><a href=\"" + clientTxt.url + "\">client.txt</a></td><td align=\"right\">" + clientTxt.size + "</td><td>mapping</td><td>" + clientTxt.sha1 + "</td></tr>\n");
                     downloadsCount++;
                 }
-
                 writeHtmlFooter(writer);
             }
 
@@ -197,24 +207,39 @@ public class ManifestParser {
                 writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
                 
                 for (LibData lib : libraries) {
-                    // Chaque lib prend la clé "name" comme nom de dossier (sécurisé pour les OS en remplaçant ':' par '-')
                     String safeFolderName = lib.nameId.replace(":", "-");
                     File individualLibDir = new File(libsDir, safeFolderName);
                     ensureDirectoryExists(individualLibDir);
 
-                    // Génération de l'index.html propre dans le sous-dossier de la lib
                     File individualLibIndex = new File(individualLibDir, "index.html");
                     try (BufferedWriter libWriter = new BufferedWriter(new FileWriter(individualLibIndex))) {
                         writeHtmlHeader(libWriter, "Index of /myfiles/minecraft/" + v.id + "/libs/" + safeFolderName + "/", "Index of /myfiles/minecraft/" + v.id + "/libs/" + safeFolderName + "/");
                         libWriter.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
-                        libWriter.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[JAR]\"></td><td><a href=\"" + lib.fileInfo.url + "\">" + lib.jarName + "</a></td><td align=\"right\">" + lib.fileInfo.size + "</td><td>library artifact</td><td>" + lib.fileInfo.sha1 + "</td></tr>\n");
+                        libWriter.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/binary.gif\" alt=\"[JAR]\"></td><td><a href=\"" + lib.fileInfo.url + "\">" + lib.jarName + "</a></td><td align=\"right\">" + lib.fileInfo.size + "</td><td>artifact</td><td>" + lib.fileInfo.sha1 + "</td></tr>\n");
                         writeHtmlFooter(libWriter);
                     }
 
-                    // Écriture de la ligne de ce dossier de lib dans l'index global /libs/
-                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"" + safeFolderName + "/\">" + safeFolderName + "</a></td><td align=\"right\">1 item</td><td>folder</td><td>&nbsp;</td></tr>\n");
+                    // Le texte affiché devient l'ID d'origine (avec les ':') et le href pointe vers le dossier sécurisé
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"" + safeFolderName + "/\">" + lib.nameId + "/</a></td><td align=\"right\">1 item</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
                 }
                 writeHtmlFooter(writer);
+            }
+
+            // --- Index du dossier 'assets' orienté mcassets.cloud (GitHub) ---
+            int assetsCount = 0;
+            if (assetIndex != null) {
+                File localAssetsIndex = new File(assetsLinkDir, "index.html");
+                try (BufferedWriter assetLocalWriter = new BufferedWriter(new FileWriter(localAssetsIndex))) {
+                    writeHtmlHeader(assetLocalWriter, "Index of /myfiles/minecraft/" + v.id + "/assets/", "Index of /myfiles/minecraft/" + v.id + "/assets/");
+                    assetLocalWriter.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/back.gif\" alt=\"[PARENTDIR]\"></td><td><a href=\"../\">Parent Directory</a></td><td align=\"right\">  - </td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                    
+                    // Redirection externe cliquable vers les ressources déshachées et structurées sur GitHub
+                    String mcAssetsGithubUrl = "https://github.com/InventiveTalentDev/minecraft-assets/tree/"+v.id+"/assets/";
+                    
+                    assetLocalWriter.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/link.gif\" alt=\"[LNK]\"></td><td><a href=\"" + mcAssetsGithubUrl + "\">Redirect Link</a></td><td align=\"right\">  - </td><td>minecraft-assets/assets at "+v.id+" · InventivetalentDev/minecraft-assets</td><td>&nbsp;</td></tr>\n");
+                    writeHtmlFooter(assetLocalWriter);
+                }
+                assetsCount = 1;
             }
 
             // --- Index de la Version ---
@@ -225,9 +250,11 @@ public class ManifestParser {
                 
                 String downloadsLabel = downloadsCount + (downloadsCount > 1 ? " items" : " item");
                 String libsLabel = libsCount + (libsCount > 1 ? " items" : " item");
+                String assetsLabel = assetsCount + (assetsCount > 1 ? " items" : " item");
                 
                 writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"downloads/\">downloads</a></td><td align=\"right\">" + downloadsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
                 writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"libs/\">libs</a></td><td align=\"right\">" + libsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"assets/\">assets</a></td><td align=\"right\">" + assetsLabel + "</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
                 writeHtmlFooter(writer);
             }
 
@@ -242,7 +269,6 @@ public class ManifestParser {
         
         if (mBlock.find()) {
             String blockContent = mBlock.group(1);
-            
             String sha1 = extractField(blockContent, "sha1");
             String size = extractField(blockContent, "size");
             String url = extractField(blockContent, "url");
@@ -254,7 +280,24 @@ public class ManifestParser {
         return null;
     }
 
-    // Récupère proprement à la fois l'ID ("name") et le bloc d'artefact associé
+    private static AssetIndexData extractAssetIndexDetails(String json) {
+        Pattern pBlock = Pattern.compile("\"assetIndex\"\\s*:\\s*\\{([^}]+)\\}");
+        Matcher mBlock = pBlock.matcher(json);
+
+        if (mBlock.find()) {
+            String blockContent = mBlock.group(1);
+            String id = extractField(blockContent, "id");
+            String sha1 = extractField(blockContent, "sha1");
+            String size = extractField(blockContent, "size");
+            String url = extractField(blockContent, "url");
+
+            if (!url.isEmpty() && !id.isEmpty()) {
+                return new AssetIndexData(id, new FileInfo(url, size, sha1));
+            }
+        }
+        return null;
+    }
+
     private static List<LibData> extractLibrariesDetails(String json) {
         List<LibData> list = new ArrayList<>();
         
@@ -273,7 +316,6 @@ public class ManifestParser {
         }
 
         if (!libsContent.isEmpty()) {
-            // Expression régulière robuste pour capturer le sous-bloc artifact et la valeur de la clé "name"
             Pattern pSingleLib = Pattern.compile("\\{\\s*\"downloads\"\\s*:\\s*\\{[^}]*\"artifact\"\\s*:\\s*\\{([^}]+)\\}[^}]*\\}\\s*,\\s*\"name\"\\s*:\\s*\"([^\"]+)\"");
             Matcher mSingleLib = pSingleLib.matcher(libsContent);
             
