@@ -1,9 +1,23 @@
 {
   "latest": {
-    "release": "1.12.2",
-    "snapshot": "1.12.2-pre2"
+    "release": "ERROR422",
+    "snapshot": "ERROR422-c"
   },
   "versions": [
+    {
+      "id": "ERROR422",
+      "type": "release",
+      "url": "https://github.com/GoxTheGoat-source/my_versions/raw/main/ERROR422.json",
+      "time": "2021-01-01T00:00:00+00:00",
+      "releaseTime": "2020-01-29T04:09:00+00:00"
+    },
+    {
+      "id": "ERROR422-c",
+      "type": "snapshot",
+      "url": "https://github.com/GoxTheGoat-source/my_versions/raw/main/ERROR422-c.json",
+      "time": "2021-01-01T00:00:00+00:00",
+      "releaseTime": "2020-01-29T04:09:00+00:00"
+    },
   {
       "id": "1.12.2",
       "type": "release",
