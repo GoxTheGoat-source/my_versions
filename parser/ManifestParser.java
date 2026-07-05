@@ -225,7 +225,7 @@ public class ManifestParser {
                     }
 
                     // Le texte affiché devient l'ID d'origine (avec les ':') et le href pointe vers le dossier sécurisé
-                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"" + safeFolderName + "/\">" + saveFolderName + "/</a></td><td align=\"right\">1 item</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"" + safeFolderName + "/\">" + saveFolderName + "</a></td><td align=\"right\">1 item</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
                 }
                 writeHtmlFooter(writer);
             }
