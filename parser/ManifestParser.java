@@ -198,7 +198,7 @@ public class ManifestParser {
                     downloadsCount++;
                 }
                 if(serverTxt != null) {
-                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/text.gif\" alt=\"[TXT]\"></td><td><a href=\"" + serverTxt.url + "\">client.txt</a></td><td align=\"right\">" + serverTxt.size + "</td><td>mapping</td><td>" + serverTxt.sha1 + "</td></tr>\n");
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/text.gif\" alt=\"[TXT]\"></td><td><a href=\"" + serverTxt.url + "\">server.txt</a></td><td align=\"right\">" + serverTxt.size + "</td><td>mapping</td><td>" + serverTxt.sha1 + "</td></tr>\n");
                     downloadsCount++;
                 }
                 writeHtmlFooter(writer);
