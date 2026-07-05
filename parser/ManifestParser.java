@@ -160,7 +160,8 @@ public class ManifestParser {
             FileInfo client = extractDownloadDetails(versionJson, "client");
             FileInfo server = extractDownloadDetails(versionJson, "server");
             FileInfo windowsServer = extractDownloadDetails(versionJson, "windows_server");
-            FileInfo clientTxt = extractDownloadDetails(versionJson, "client\\.txt");
+            FileInfo clientTxt = extractDownloadDetails(versionJson, "client_mappings");
+            FileInfo serverTxt = extractDownloadDetails(versionJson, "server_mappings");
 
             List<LibData> libraries = extractLibrariesDetails(versionJson);
             AssetIndexData assetIndex = extractAssetIndexDetails(versionJson);
@@ -196,6 +197,10 @@ public class ManifestParser {
                     writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/text.gif\" alt=\"[TXT]\"></td><td><a href=\"" + clientTxt.url + "\">client.txt</a></td><td align=\"right\">" + clientTxt.size + "</td><td>mapping</td><td>" + clientTxt.sha1 + "</td></tr>\n");
                     downloadsCount++;
                 }
+                if(serverTxt != null) {
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/text.gif\" alt=\"[TXT]\"></td><td><a href=\"" + serverTxt.url + "\">client.txt</a></td><td align=\"right\">" + serverTxt.size + "</td><td>mapping</td><td>" + serverTxt.sha1 + "</td></tr>\n");
+                    downloadsCount++;
+                }
                 writeHtmlFooter(writer);
             }
 
@@ -220,12 +225,12 @@ public class ManifestParser {
                     }
 
                     // Le texte affiché devient l'ID d'origine (avec les ':') et le href pointe vers le dossier sécurisé
-                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"" + safeFolderName + "/\">" + lib.nameId + "/</a></td><td align=\"right\">1 item</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
+                    writer.write("        <tr><td valign=\"top\"><img src=\"https://www.apache.org/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"" + safeFolderName + "/\">" + saveFolderName + "/</a></td><td align=\"right\">1 item</td><td>&nbsp;</td><td>&nbsp;</td></tr>\n");
                 }
                 writeHtmlFooter(writer);
             }
 
-            // --- Index du dossier 'assets' orienté mcassets.cloud (GitHub) ---
+            // --- Index du dossier 'assets' orienté mcasset.cloud (GitHub) ---
             int assetsCount = 0;
             if (assetIndex != null) {
                 File localAssetsIndex = new File(assetsLinkDir, "index.html");
