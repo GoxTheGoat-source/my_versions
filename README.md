@@ -37,8 +37,11 @@ If you are skilled in **Java Bytecode, Reverse Engineering, Recaf, or Enigma**, 
 2. Open the project in **Enigma(Included in the 7z archive)** or **Recaf**.
 3. Help us reverse-engineer, clean up, and rename the classes inside the `none/` folder.
 4. Open an **Issue** or submit a **Pull Request** right here on GitHub to share your findings!
+
+---
+
 ## 🥱 Laziness
 
-**It's best to read the README.txt file in 7z**
+**It's best to read the README.txt file in the 7z archive**
 
 Let's crack the code of Error 422 together.
