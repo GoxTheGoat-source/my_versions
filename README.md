@@ -15,8 +15,8 @@ This project aims to fix and port the famous Minecraft creepy/ARG mod **Error 42
 ## 📂 Project Downloads
 
 All required files, binaries, and current mappings can be found in the [Releases](https://github.com/GoxtheGoat-source/my_versions/releases) tab:
-* 📦 `ERROR422-crossplatform.jar` *(Experimental / Not fully tested yet)* [link](https://github.com/GoxtheGoat-source/my_versions/releases/download/vesrions/ERROR422-crossplatform.jar)
-* 🛠️ `ERROR422.7z` *(Contains the base SRG mappings and Enigma JOBF file)* [link](https://github.com/GoxtheGoat-source/my_versions/releases/download/vesrions/ERROR422.7z)
+* 📦 `ERROR422-crossplatform.jar` *(Experimental / Not fully tested yet)* [link](https://github.com/GoxtheGoat-source/my_versions/releases/download/versions/ERROR422-crossplatform.jar)
+* 🛠️ `ERROR422.7z` *(Contains the necessary equipment for deobfuscation)* [link](https://github.com/GoxtheGoat-source/my_versions/releases/download/versions/ERROR422.7z)
 
 ---
 
