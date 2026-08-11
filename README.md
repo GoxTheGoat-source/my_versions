@@ -15,8 +15,8 @@ This project aims to fix and port the famous Minecraft creepy/ARG mod **Error 42
 ## 📂 Project Downloads
 
 All required files, binaries, and current mappings can be found in the [Releases](https://github.com/GoxtheGoat-source/my_versions/releases) tab:
-* 📦 `ERROR422-crossplatform.jar` *(Experimental / Not fully tested yet)*
-* 🛠️ `ERROR422.7z` *(Contains the base SRG mappings and Enigma JOBF file)*
+* 📦 `ERROR422-crossplatform.jar` *(Experimental / Not fully tested yet)* [link](https://github.com/GoxtheGoat-source/my_versions/releases/download/vesrions/ERROR422-crossplatform.jar)
+* 🛠️ `ERROR422.7z` *(Contains the base SRG mappings and Enigma JOBF file)* [link](https://github.com/GoxtheGoat-source/my_versions/releases/download/vesrions/ERROR422.7z)
 
 ---
 
@@ -33,9 +33,12 @@ Right now, these classes are a mess of raw bytecode and unreadable names, making
 If you are skilled in **Java Bytecode, Reverse Engineering, Recaf, or Enigma**, your help is more than welcome! 
 
 ### How to get started:
-1. Download the mappings and the cross-platform JAR from the Releases tab.
-2. Open the project in **Enigma** or **Recaf**.
+1. Download the 7z archive and test the cross-platform JAR from the Releases tab.
+2. Open the project in **Enigma(Included in the 7z archive)** or **Recaf**.
 3. Help us reverse-engineer, clean up, and rename the classes inside the `none/` folder.
 4. Open an **Issue** or submit a **Pull Request** right here on GitHub to share your findings!
+## 🥱 Laziness
+
+**It's best to read the README.txt file in 7z**
 
 Let's crack the code of Error 422 together.
