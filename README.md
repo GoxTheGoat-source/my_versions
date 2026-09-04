@@ -22,9 +22,20 @@ All required files, binaries, and current mappings can be found in the [Releases
 
 ## ❌ The Challenge: The `none/` Package
 
-The original mod uses a custom obfuscation layer that pushes critical classes (like menus, event handlers, or game loops) into a root package named `none/`. 
+Most of the remaining work is currently focused on understanding the classes inside `none/`. 
 
 Right now, these classes are a mess of raw bytecode and unreadable names, making the game unstable and hard to patch.
+
+---
+
+### Current Tasks
+
+- [ ] Identify unknown classes in `none/`
+- [ ] Determine what important methods do
+- [ ] Rename classes and methods when their purpose is confirmed
+- [ ] Document discoveries
+- [ ] Test changes in-game
+- [ ] Update the mappings
 
 ---
 
