@@ -33,9 +33,9 @@ Right now, these classes are a mess of raw bytecode and unreadable names, making
 - [ ] Identify unknown classes in `none/`
 - [ ] Determine what important methods do
 - [ ] Rename classes and methods when their purpose is confirmed
-- [ ] Document discoveries
+- [ ] Document discoveries in GitHub Discussions, Issues, or by email (email is in the 7z archive)
 - [ ] Test changes in-game
-- [ ] Update the mappings
+- [ ] Validate or reject findings and update the mappings
 
 ---
 
@@ -53,6 +53,6 @@ If you are skilled in **Java Bytecode, Reverse Engineering, Recaf, or Enigma**, 
 
 ## 🥱 Laziness
 
-**It's best to read the README.txt file in the 7z archive**
+Yeah, I know. Read the `README.txt` in the 7z archive.
 
 Let's crack the code of Error 422 together.
