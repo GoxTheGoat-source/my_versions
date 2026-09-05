@@ -53,6 +53,7 @@ If you are skilled in **Java Bytecode, Reverse Engineering, Recaf, or Enigma**, 
 
 ## 🥱 Laziness
 
-Yeah, I know. Read the `README.txt` in the 7z archive.
+Yeah, I know. Read the `README.txt` in the 7z archive...
+The 7z archive's jobf file is outdated. So I have a regularly updated version right [here](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/ERROR422.jobf)
 
 Let's crack the code of Error 422 together.
