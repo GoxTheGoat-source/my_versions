@@ -1,3 +1,7 @@
+## 🇺🇸 English Version
+
+---
+
 # Minecraft ERROR422 — Cross-Platform & Deobfuscation Project
 
 **Reverse engineering, Java bytecode analysis, cross-platform compatibility and software preservation.**
@@ -205,31 +209,30 @@ All required files, experimental builds and current mappings are available in th
 ### Available Files
 
 - [ERROR422-crossplatform-modified.jar](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/ERROR422-crossplatform-modified.jar) — Modified experimental cross-platform build.
+- [wlK-modified.class](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/wlK-modified.class) — The modified `wlK` class.
+- [lwjgl-2.4.2.zip](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/lwjgl-2.4.2.zip) — The `zip` file containing the LWJGL and JInput tools/JARs.
 - [ERROR422-crossplatform.jar](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/ERROR422-crossplatform.jar) — Earlier experimental cross-platform build.
 - [ERROR422.7z](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/ERROR422.7z) — Contains the necessary equipment and files for deobfuscation.
 - [ERROR422.jobf](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/ERROR422.jobf) — Updated Enigma structure file.
 
 **Important:** The `ERROR422.jobf` file included in the 7z archive may be outdated. Use the separately published version above when working with the latest mappings.
 
-The modified `wlK` class is also available as a separate class file in the project distribution when provided.
-
 ---
-
-## 🧰 Tools & Technologies
+## 🧰 Tools and Technologies
 
 The project uses or investigates the following tools and technologies:
 
 - Java and JVM bytecode.
 - Minecraft Coder Pack (MCP) 1.5.2.
-- Enigma Legacy 0.10.4-beta.
+- Enigma 0.10.4-beta, also referred to as Enigma Legacy — (Included in the `7z` archive).
 - Recaf.
 - Java Archive (JAR) analysis.
-- LWJGL 2.4.2.
-- JInput 2.0.0-b01.
-- Paulscode SoundSystem.
-- OpenAL.
-- AppleJavaExtensions.
-- Windows, Linux and macOS native libraries.
+- LWJGL 2.4.2 — (Included in the `zip` file).
+- JInput 2.0.0-b01 — (Included in the `zip` file).
+- Paulscode SoundSystem — (Included in the software).
+- OpenAL — (Included in the software).
+- AppleJavaExtensions — (Included in the `zip` file).
+- Native libraries for Windows, Linux, and macOS — (Included in the `zip` file).
 
 ---
 
@@ -511,13 +514,13 @@ Tous les fichiers nécessaires, builds expérimentaux et mappings actuels sont d
 ### Fichiers disponibles
 
 - [ERROR422-crossplatform-modified.jar](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/ERROR422-crossplatform-modified.jar) — Version multiplateforme expérimentale modifiée.
+- [wlK-modified.class](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/wlK-modified.class) — La classe `wlK` modifiée.
+- [lwjgl-2.4.2.zip](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/lwjgl-2.4.2.zip) — Le `zip` des outils LWJGL et JInput du jar.
 - [ERROR422-crossplatform.jar](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/ERROR422-crossplatform.jar) — Première version expérimentale multiplateforme.
 - [ERROR422.7z](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/ERROR422.7z) — Contient les outils et fichiers nécessaires à la désobfuscation.
 - [ERROR422.jobf](https://github.com/GoxTheGoat-source/my_versions/releases/download/versions/ERROR422.jobf) — Fichier de structure Enigma actualisé.
 
 **Important :** le fichier `ERROR422.jobf` inclus dans l'archive 7z peut être obsolète. Utilisez la version publiée séparément ci-dessus pour travailler avec les mappings les plus récents.
-
-La classe `wlK` modifiée est également disponible séparément dans la distribution du projet lorsqu'elle est publiée.
 
 ---
 
@@ -527,15 +530,15 @@ Le projet utilise ou étudie les outils et technologies suivants :
 
 - Java et bytecode JVM.
 - Minecraft Coder Pack (MCP) 1.5.2.
-- Enigma Legacy 0.10.4-beta.
+- Enigma 0.10.4-beta, que j'appelle aussi Enigma Legacy — (Présent dans l'archive `7z`).
 - Recaf.
 - Analyse d'archives Java (JAR).
-- LWJGL 2.4.2.
-- JInput 2.0.0-b01.
-- Paulscode SoundSystem.
-- OpenAL.
-- AppleJavaExtensions.
-- Bibliothèques natives Windows, Linux et macOS.
+- LWJGL 2.4.2 — (Présent dans le `zip`).
+- JInput 2.0.0-b01 — (Présent dans le `zip`).
+- Paulscode SoundSystem — (Présent dans le logiciel).
+- OpenAL — (Présent dans le logiciel).
+- AppleJavaExtensions — (Présent dans le `zip`).
+- Bibliothèques natives Windows, Linux et macOS — (Présent dans le `zip`).
 
 ---
 
